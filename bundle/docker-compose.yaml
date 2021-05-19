@@ -1,0 +1,35 @@
+# Select compose version
+version: "3"
+
+# Define services
+services: 
+
+    # Create matterbot service
+    matterbot:
+
+        # Select service image
+        image: matterbot/matterbot
+
+        # Expose ports
+        ports: 
+            - 80:80
+
+        # Mount volumes
+        volumes:
+            # Persistent data volume
+            - data:/opt
+            # Application code volume
+            - ./application.mjs:/project/backend/application.mjs
+
+        # Environment variables
+        environment: 
+            # Mattermost credentials
+            - MM_HOSTNAME=""
+            - MM_USERNAME=""
+            - MM_PASSWORD=""
+            # Secrets and passwords
+            - SECRET=""
+            - PASSWORD=""
+
+volumes:
+    data:
