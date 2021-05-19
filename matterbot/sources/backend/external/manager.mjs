@@ -54,12 +54,12 @@ export class Manager {
 			// Convert to target list
 			let targets = [];
 
-			// Check whether there are clients
-			if (tree[teamname].hasOwnProperty("clients")) {
-				for (let client in tree[teamname].clients) {
+			// Check whether there are users
+			if (tree[teamname].hasOwnProperty("users")) {
+				for (let user in tree[teamname].users) {
 					targets.push({
-						type: "client",
-						name: client
+						type: "user",
+						name: user
 					});
 				}
 			}
