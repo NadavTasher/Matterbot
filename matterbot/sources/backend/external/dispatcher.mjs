@@ -29,7 +29,7 @@ export default {
 		// Message dispatching endpoints
 		dispatch: {
 			handler: (parameters) => {
-				Dispatch(parameters, false);
+				return Dispatch(parameters, false);
 			},
 			parameters: {
 				message: "string",
@@ -39,7 +39,7 @@ export default {
 		},
 		sensitive: {
 			handler: (parameters) => {
-				Dispatch(parameters, true);
+				return Dispatch(parameters, true);
 			},
 			parameters: {
 				message: "string",
