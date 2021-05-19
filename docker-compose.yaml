@@ -20,13 +20,14 @@ services:
             - data:/opt
 
         # Environment variables
-        # environment: 
-        #     - MM_HOSTNAME=""
-        #     - MM_USERNAME=""
-        #     - MM_PASSWORD=""
-
-        env_file: 
-            - ../environment.env
+        environment: 
+            # Mattermost credentials
+            - MM_HOSTNAME=""
+            - MM_USERNAME=""
+            - MM_PASSWORD=""
+            # Secrets and passwords
+            - SECRET=""
+            - PASSWORD=""
 
 volumes:
     data:

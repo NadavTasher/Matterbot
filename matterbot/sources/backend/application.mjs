@@ -10,10 +10,20 @@ import { Server } from "./internal/server.mjs";
 let mServer = new Server(8000);
 
 // Import the routes
-import { Routes } from "./external/matterbot.mjs";
+import { Manager } from "./external/manager.mjs";
+import routes from "./external/dispatcher.mjs";
 
 // Enable the routes
-mServer.insertAll(Routes);
+mServer.insertAll(routes);
+
+// Initialize manager and add teams
+Manager.initialize({
+	hostname: process.env.MM_HOSTNAME,
+	username: process.env.MM_USERNAME,
+	password: process.env.MM_PASSWORD
+});
+
+// TODO: Add teams
 
 // Listen for requests
 mServer.listen();

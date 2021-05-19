@@ -10,7 +10,7 @@
     <meta charset="UTF-8" />
 
     <!-- App Description -->
-    <meta name="description" content="AppDescription" />
+    <meta name="description" content="Dispatcher token manager" />
 
     <!-- Viewport -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=5, user-scalable=yes, minimal-ui" />
@@ -21,7 +21,7 @@
 
     <!-- Mobile Safari -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="AppName" />
+    <meta name="apple-mobile-web-app-title" content="Dispatcher" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
     <!-- Icons -->
@@ -56,11 +56,38 @@
 
     <!-- Application script -->
     <script type="text/javascript">
-        window.addEventListener("load", function () { });
+        window.addEventListener("load", async function () {
+            // Import modules
+            await Module.import("API", "UI", "External:Dialog");
+
+            // Add click listener
+            "issue".find().addEventListener("click", () => {
+                // Prompt for password
+                Dialog.prompt("Please enter your password").then(
+                    (password) => {
+                        // Send API call to issue token
+                        API.call("authority", "issue", {
+                            application: "application".read(),
+                            validity: (new Date("date".read()).getTime()) - (new Date().getTime()),
+                            password: password
+                        }).then(
+                            (token) => {
+                                "token".write(token);
+                                "token".view();
+                            }
+                        ).catch(
+                            (error) => {
+                                Dialog.alert(error);
+                            }
+                        )
+                    }
+                ).catch();
+            });
+        });
     </script>
 
     <!-- App Title -->
-    <title>AppName</title>
+    <title>Dispatcher</title>
 
     <!-- No Script -->
     <noscript></noscript>
@@ -69,7 +96,20 @@
 </head>
 
 <body column>
-    <!--App Layout-->
+    <!-- Titles -->
+    <p huge left>Dispatcher</p>
+    <p small left>Mattermost message dispatcher token generator</p>
+    <!-- Form section -->
+    <div>
+        <div id="form" coasted>
+            <!-- Inputs -->
+            <input medium left id="application" placeholder="Application name" />
+            <input medium left id="date" style="flex-direction: row;" type="date" />
+            <!-- Submit button -->
+            <button medium right id="issue">Issue token</button>
+        </div>
+        <textarea input tiny center id="token" hidden readonly></textarea>
+    </div>
 </body>
 
 </html>
