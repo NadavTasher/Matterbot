@@ -11,8 +11,8 @@ const Dispatch = (parameters, exceptions = true) => {
 	Token.validate(parameters.token);
 
 	// Validate recipients
-	for (let team of parameters.recipients)
-		if (!Validator.isObject(team))
+	for (let team in parameters.recipients)
+		if (!Validator.isObject(parameters.recipients[team]))
 			throw new Error("Team subtree is not an object");
 
 	// Send message
