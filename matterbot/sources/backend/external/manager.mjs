@@ -56,7 +56,7 @@ export class Manager {
 
 			// Check whether there are users
 			if (tree[teamname].hasOwnProperty("users")) {
-				for (let user in tree[teamname].users) {
+				for (let user of tree[teamname].users) {
 					targets.push({
 						type: "user",
 						name: user
@@ -65,7 +65,7 @@ export class Manager {
 			}
 			// Check whether there are channels
 			if (tree[teamname].hasOwnProperty("channels")) {
-				for (let channel in tree[teamname].channels) {
+				for (let channel of tree[teamname].channels) {
 					targets.push({
 						type: "channel",
 						name: channel
