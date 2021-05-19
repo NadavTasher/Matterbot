@@ -24,6 +24,7 @@ Manager.initialize({
 });
 
 // TODO: Add teams
+Manager.create("[EXAMPLE-TEAM]");
 
 // Listen for requests
 mServer.listen();

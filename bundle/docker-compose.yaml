@@ -19,7 +19,7 @@ services:
             # Persistent data volume
             - data:/opt
             # Application code volume
-            - ./application.mjs:/project/backend/application.mjs
+            - ./sources/application.mjs:/project/backend/application.mjs
 
         # Environment variables
         environment: 
