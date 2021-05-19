@@ -2,7 +2,6 @@
 FROM nadavtasher/template:2021.03.28
 
 # Install dependancies
-RUN npm install node-fetch@2.6.1
 RUN npm install mattermost-client@6.4.1
 
 # Environment
