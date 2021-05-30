@@ -1,5 +1,5 @@
 // Import manager
-import { Manager } from "./manager.mjs";
+import { Bot } from "./bot.mjs";
 import { Validator, Password, Authority } from "../internal/utilities.mjs";
 
 // Create token authority
@@ -7,8 +7,7 @@ const Token = new Authority(process.env.SECRET);
 
 // Dispatcher helper function
 const Dispatch = (parameters, exceptions = true) => {
-	// Validate token
-	Token.validate(parameters.token);
+
 
 	// Validate recipients
 	for (let team in parameters.recipients)
@@ -29,7 +28,14 @@ export default {
 		// Message dispatching endpoints
 		dispatch: {
 			handler: (parameters) => {
-				return Dispatch(parameters, false);
+				// Validate token
+				Token.validate(parameters.token);
+
+				// Dispatch messages
+				Bot.deliver(parameters.message, parameters.recipients, false);
+
+				// Return message
+				return `Sending "${parameters.message}" quietly.`;
 			},
 			parameters: {
 				message: "string",
@@ -39,7 +45,14 @@ export default {
 		},
 		sensitive: {
 			handler: (parameters) => {
-				return Dispatch(parameters, true);
+				// Validate token
+				Token.validate(parameters.token);
+				
+				// Dispatch messages
+				Bot.deliver(parameters.message, parameters.recipients, true);
+
+				// Return message
+				return `Message send successfully.`;
 			},
 			parameters: {
 				message: "string",

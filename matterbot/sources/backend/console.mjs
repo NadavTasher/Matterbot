@@ -9,7 +9,7 @@ import REPL from "repl";
 // Import utilities
 import { Utilities, Validator, Hash, Password, Authority, File, Database } from "./internal/utilities.mjs";
 import { Bot } from "./external/bot.mjs";
-import { Manager } from "./external/manager.mjs";
+import { Client } from "./external/client.mjs";
 
 // Initialize REPL
 let mREPL = REPL.start();
@@ -24,4 +24,4 @@ mREPL.context.File = File;
 mREPL.context.Database = Database;
 
 mREPL.context.Bot = Bot;
-mREPL.context.Manager = Manager;
+mREPL.context.Client = Client;

@@ -9,22 +9,17 @@ import { Server } from "./internal/server.mjs";
 // Create the server
 let mServer = new Server(8000);
 
+// Import client
+import { Client } from "./external/client.mjs";
+
+// Log in to client
+Client.login(process.env.MM_HOSTNAME, process.env.MM_USERNAME, process.env.MM_PASSWORD);
+
 // Import the routes
-import { Manager } from "./external/manager.mjs";
 import routes from "./external/dispatcher.mjs";
 
 // Enable the routes
 mServer.insertAll(routes);
-
-// Initialize manager and add teams
-Manager.initialize({
-	hostname: process.env.MM_HOSTNAME,
-	username: process.env.MM_USERNAME,
-	password: process.env.MM_PASSWORD
-});
-
-// TODO: Add teams
-Manager.create("[EXAMPLE-TEAM]");
 
 // Listen for requests
 mServer.listen();
