@@ -6,6 +6,7 @@ import fetch from "node-fetch";
  */
 export class Client {
 
+	// Initialize static parameters
 	static #ids = [];
 	static #tree = {};
 	static #users = {};
