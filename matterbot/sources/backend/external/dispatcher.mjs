@@ -1,24 +1,29 @@
 // Import manager
 import { Bot } from "./bot.mjs";
-import { Validator, Password, Authority } from "../internal/utilities.mjs";
+import { Password, Token } from "../internal/utilities.mjs";
 
 // Create token authority
-const Token = new Authority(process.env.SECRET);
+const token = new Token(process.env.SECRET);
 
 // Dispatcher helper function
 const Dispatch = (parameters, exceptions = true) => {
+	// Assemble minimal permissions
+	let permissions = [];
+	// Check if users are needed
+	if (parameters.recipients.hasOwnProperty("users") && parameters.recipients.users.length > 0)
+		permissions.push(`mattermost:users`);
+	// Append recipient channels
+	for (let teamName in parameters.recipients.channels) {
+		for (let channelName of parameters.recipients.channels[teamName]) {
+			permissions.push(`mattermost:channels:${teamName}:${channelName}`);
+		}
+	}
 
+	// Dispatch messages
+	Bot.deliver(token.validate(parameters.token, permissions).content.prefix + parameters.message, parameters.recipients, exceptions);
 
-	// Validate recipients
-	for (let team in parameters.recipients)
-		if (!Validator.isObject(parameters.recipients[team]))
-			throw new Error("Team subtree is not an object");
-
-	// Send message
-	Manager.deliver(parameters.message, parameters.recipients, exceptions);
-
-	// Return success
-	return "Sending messages";
+	// Return message
+	return exceptions ? `Message ${parameters.message} was sent.` : `Sending "${parameters.message}" quietly.`;
 };
 
 // Bot dispatcher
@@ -28,14 +33,7 @@ export default {
 		// Message dispatching endpoints
 		dispatch: {
 			handler: (parameters) => {
-				// Validate token
-				Token.validate(parameters.token);
-
-				// Dispatch messages
-				Bot.deliver(parameters.message, parameters.recipients, false);
-
-				// Return message
-				return `Sending "${parameters.message}" quietly.`;
+				return Dispatch(parameters, false);
 			},
 			parameters: {
 				message: "string",
@@ -45,14 +43,7 @@ export default {
 		},
 		sensitive: {
 			handler: (parameters) => {
-				// Validate token
-				Token.validate(parameters.token);
-				
-				// Dispatch messages
-				Bot.deliver(parameters.message, parameters.recipients, true);
-
-				// Return message
-				return `Message send successfully.`;
+				return Dispatch(parameters, true);
 			},
 			parameters: {
 				message: "string",
@@ -66,23 +57,45 @@ export default {
 		// Dispatcher issuer
 		issue: {
 			handler: (parameters) => {
-				// Issue new token with given validity
-				return Token.issue(parameters.application, parameters.validity);
+				// Signing mode
+				let mode = false;
+				// Check for password validation
+				if (!Password.check(parameters.token, process.env.PASSWORD)) {
+					// Validate token
+					token.validate(parameters.token);
+					// Change mode
+					mode = true;
+				}
+
+				// Create token parameters
+				let permissions = [];
+				// Check if issuer
+				if (parameters.issuer)
+					permissions.push(`issue`);
+				// Check if users
+				if (parameters.users)
+					permissions.push(`mattermost:users`);
+				// Add channels
+				for (let channel of parameters.channels)
+					permissions.push(`mattermost:channels:${channel}`);
+
+				// Create token
+				return token.issue({
+					name: parameters.name,
+					content: {
+						prefix: parameters.prefix
+					},
+					permissions: permissions
+				}, parameters.validity, mode ? parameters.token : null);
 			},
 			parameters: {
-				"application": "string",
-				"validity": "number",
-				"password": (password) => Password.validate(password, process.env.PASSWORD)
-			}
-		},
-		// Dispatcher validator
-		validate: {
-			handler: (parameters) => {
-				// Validate token
-				return Token.validate(parameters.token);
-			},
-			parameters: {
-				"token": "string"
+				token: "string", // Token or password
+				name: "string", // Application name or personal name
+				prefix: "string", // Message prefix
+				issuer: "boolean", // Is the token allowed to issue more children
+				validity: "number", // Validity date
+				users: "boolean", // Allowed to message users
+				channels: "array" // Channels which are allowed
 			}
 		}
 	}

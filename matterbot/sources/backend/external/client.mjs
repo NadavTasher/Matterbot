@@ -6,7 +6,7 @@ import fetch from "node-fetch";
  */
 export class Client {
 
-	// Initial team object
+	static #ids = [];
 	static #tree = {};
 	static #users = {};
 
@@ -20,7 +20,23 @@ export class Client {
 	static #userToken = null;
 
 	/**
-	 * Logs in and fetches a token
+	 * Periodically logs in and handles updates
+	 * @param hostname Mattermost hostname
+	 * @param username Mattermost username
+	 * @param password Mattermost password
+	 */
+	static async initialize(hostname, username, password) {
+		// Log in initially
+		await Client.login(hostname, username, password);
+
+		// Periodically log-in
+		setInterval(() => {
+			Client.login(hostname, username, password);
+		}, 1000 * 60 * 60);
+	}
+
+	/**
+	 * Logs in and fetches a token, then updates teams and users
 	 * @param hostname Mattermost hostname
 	 * @param username Mattermost username
 	 * @param password Mattermost password
@@ -99,17 +115,27 @@ export class Client {
 	 * Indexes a specific team
 	 * @param teamID Team ID
 	 * @param teamName Team Name
+	 * @param teamDisplay Team Display Name
 	 */
-	static async #team(teamID, teamName) {
+	static async #team(teamID, teamName, teamDisplay) {
 		// Load team channels
 		const channels = await Client.#call(`users/${Client.#userID}/teams/${teamID}/channels`);
 
 		// Loop over channels and add to tree
 		for (let channel of channels) {
 			// Make sure channel is of this team
-			if (channel.team_id === teamID)
-				// Add to tree
+			if (channel.team_id === teamID) {
+				// Make sure the channel is not already indexed
+				if (Client.#ids.includes(channel.id))
+					continue;
+
+				// Add to tree and aliases
 				Client.#tree[teamName].channels[channel.name] = channel.id;
+				Client.#tree[teamDisplay].channels[channel.display_name] = channel.id;
+
+				// Add to known ID list
+				Client.#ids.push(channel.id);
+			}
 		}
 
 		// Load team users
@@ -125,14 +151,18 @@ export class Client {
 
 			// Loop over users and add to tree
 			for (let user of users) {
+				// Make sure user does not exist already
+				if (Client.#ids.includes(user.user_id))
+					continue;
+
 				// Get user information
 				let information = await Client.#call(`users/${user.user_id}`);
 
-				// Add to tree
-				Client.#tree[teamName].users[information.email] = user.user_id;
-
 				// Add to users
 				Client.#users[information.email] = user.user_id;
+
+				// Push to known ID list
+				Client.#ids.push(user.user_id);
 			}
 
 			// Increment page index
@@ -152,15 +182,12 @@ export class Client {
 
 		// Loop for each team and add to list
 		for (let team of listTeams) {
-			// Update in tree
-			Client.#tree[team.name] = {
-				id: team.id,
-				users: [],
-				channels: []
-			};
+			// Initialize objects
+			Client.#tree[team.name] = { id: team.id, channels: [] };
+			Client.#tree[team.display_name] = { id: team.id, channels: [] };
 
 			// Update team with new information
-			Client.#team(team.id, team.name);
+			Client.#team(team.id, team.name, team.display_name);
 		}
 	}
 

@@ -58,30 +58,29 @@
     <script type="text/javascript">
         window.addEventListener("load", async function () {
             // Import modules
-            await Module.import("API", "UI", "External:Dialog");
+            await Module.load("API", "UI", "GUI");
 
             // Add click listener
             "issue".find().addEventListener("click", () => {
-                // Prompt for password
-                Dialog.prompt("Please enter your password").then(
-                    (password) => {
-                        // Send API call to issue token
-                        API.call("authority", "issue", {
-                            application: "application".read(),
-                            validity: (new Date("date".read()).getTime()) - (new Date().getTime()),
-                            password: password
-                        }).then(
-                            (token) => {
-                                "token".write(token);
-                                "token".view();
-                            }
-                        ).catch(
-                            (error) => {
-                                Dialog.alert(error);
-                            }
-                        )
+                // Send API call to issue token
+                API.call("authority", "issue", {
+                    token: "access".read(), // Parent token / Password
+                    name: "name".read(), // Personal name / Application name
+                    prefix: "prefix".read(), // Message prefix
+                    issuer: "issuer".read() === "true", // Will this token be able to issue child tokens?
+                    validity: new Date("validity".read()).getTime(), // Token expiration date
+                    users: "users".read() === "true", // Allowed to message users
+                    channels: "channels".read().split(",").map((value) => value.trim()) // Channels allowed to message
+                }).then(
+                    (token) => {
+                        "token".write(token);
+                        "token".view();
                     }
-                ).catch();
+                ).catch(
+                    (error) => {
+                        Dialog.alert(error);
+                    }
+                )
             });
         });
     </script>
@@ -102,13 +101,26 @@
     <!-- Form section -->
     <div>
         <div id="form" coasted>
-            <!-- Inputs -->
-            <input medium left id="application" placeholder="Application name" />
-            <input medium left id="date" style="flex-direction: row;" type="date" />
+            <!-- Token option inputs -->
+            <input medium left id="access" placeholder="Password / Parent token" />
+            <select medium left input id="issuer">
+                <option value="true">Allowed to issue child tokens</option>
+                <option value="false">Not allowed to issue child tokens</option>
+            </select>
+            <!-- Application inputs -->
+            <input medium left id="name" placeholder="Application name / Personal name" />
+            <input medium left id="validity" style="flex-direction: row;" type="date" />
+            <!-- Messaging inputs -->
+            <input medium left id="prefix" placeholder="Message prefix" />
+            <select medium left input id="users">
+                <option value="true">Allowed to message individuals</option>
+                <option value="false">Not allowed to message individuals</option>
+            </select>
+            <input small left id="channels" placeholder="Channels - team:channel" />
             <!-- Submit button -->
             <button medium right id="issue">Issue token</button>
         </div>
-        <textarea input tiny center id="token" hidden readonly></textarea>
+        <textarea input tiny center id="token" style="height:30vh;" hidden readonly></textarea>
     </div>
 </body>
 

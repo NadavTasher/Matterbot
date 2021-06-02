@@ -13,7 +13,7 @@ let mServer = new Server(8000);
 import { Client } from "./external/client.mjs";
 
 // Log in to client
-Client.login(process.env.MM_HOSTNAME, process.env.MM_USERNAME, process.env.MM_PASSWORD);
+Client.initialize(process.env.MM_HOSTNAME, process.env.MM_USERNAME, process.env.MM_PASSWORD);
 
 // Import the routes
 import routes from "./external/dispatcher.mjs";
