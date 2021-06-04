@@ -1,54 +1,55 @@
 // Import manager
 import { Bot } from "./bot.mjs";
-import { Password, Token } from "../internal/utilities.mjs";
+import { Password, Token, Authority, Validator } from "../internal/utilities.mjs";
 
 // Create token authority
-const token = new Token(process.env.SECRET);
-
-// Dispatcher helper function
-const Dispatch = (parameters, exceptions = true) => {
-	// Assemble minimal permissions
-	let permissions = [];
-	// Check if users are needed
-	if (parameters.recipients.hasOwnProperty("users") && parameters.recipients.users.length > 0)
-		permissions.push(`mattermost:users`);
-	// Append recipient channels
-	for (let teamName in parameters.recipients.channels) {
-		for (let channelName of parameters.recipients.channels[teamName]) {
-			permissions.push(`mattermost:channels:${teamName}:${channelName}`);
-		}
-	}
-
-	// Dispatch messages
-	Bot.deliver(token.validate(parameters.token, permissions).content.prefix + parameters.message, parameters.recipients, exceptions);
-
-	// Return message
-	return exceptions ? `Message ${parameters.message} was sent.` : `Sending "${parameters.message}" quietly.`;
-};
+const authority = new Authority(process.env.SECRET);
 
 // Bot dispatcher
 export default {
 	// Dispatcher API
-	dispatcher: {
-		// Message dispatching endpoints
+	mattermost: {
 		dispatch: {
 			handler: (parameters) => {
-				return Dispatch(parameters, false);
+				// Validate token with mattermost permission
+				const token = authority.validate(parameters.token, [`mattermost`]);
+
+				// Check channels and users
+				const users = token.has(`mattermost:users`);
+
+				// Check if users are needed
+				if (Validator.valid(parameters.recipients, { users: "array" }) && parameters.recipients.users.length > 0 && !users)
+					throw new Error(`Direct messaging is not allowed to this token`);
+
+				// Individual channel check
+				for (const team in parameters.recipients.channels) {
+					// Check whether the token has the team global permission
+					const teamAllowed = token.has(`mattermost:channels:${team}`);
+
+					// Loop over all channels
+					for (const channel of parameters.recipients.channels[team]) {
+						if (["Town Square", "town-square", "Off-Topic", "off-topic"].includes(channel)) {
+							if (!token.has(`mattermost:channels:${team}:${channel}`))
+								throw new Error(`Exception channel messaging to channel ${channel} in team ${team} is not allowed to this token`)
+						} else {
+							if (!teamAllowed)
+								if (!token.has(`mattermost:channels:${team}:${channel}`))
+									throw new Error(`Channel messaging to channel ${channel} in team ${team} is not allowed to this token`);
+						}
+					}
+				}
+
+				// Dispatch messages
+				Bot.deliver(token.contents().prefix + parameters.message, parameters.recipients, parameters.important);
+
+				// Return message
+				return parameters.important ? `Message ${parameters.message} was sent.` : `Sending "${parameters.message}" quietly.`;
 			},
 			parameters: {
+				token: "string",
 				message: "string",
 				recipients: "object",
-				token: "string"
-			}
-		},
-		sensitive: {
-			handler: (parameters) => {
-				return Dispatch(parameters, true);
-			},
-			parameters: {
-				message: "string",
-				recipients: "object",
-				token: "string"
+				important: "boolean",
 			}
 		}
 	},
@@ -58,44 +59,49 @@ export default {
 		issue: {
 			handler: (parameters) => {
 				// Signing mode
-				let mode = false;
+				let useToken = false;
 				// Check for password validation
 				if (!Password.check(parameters.token, process.env.PASSWORD)) {
 					// Validate token
 					token.validate(parameters.token);
 					// Change mode
-					mode = true;
+					useToken = true;
 				}
 
+				// Make sure the prefix is not empty
+				if (useToken && parameters.prefix.length === 0)
+					throw new Error(`Empty prefix is not allowed for child tokens`);
+
 				// Create token parameters
-				let permissions = [];
+				let permissions = [`mattermost`];
+				
 				// Check if issuer
 				if (parameters.issuer)
 					permissions.push(`issue`);
 				// Check if users
 				if (parameters.users)
 					permissions.push(`mattermost:users`);
-				// Add channels
-				for (let channel of parameters.channels)
+
+				// Add exception channels
+				for (const channel of parameters.channels)
 					permissions.push(`mattermost:channels:${channel}`);
 
 				// Create token
-				return token.issue({
-					name: parameters.name,
-					content: {
-						prefix: parameters.prefix
-					},
-					permissions: permissions
-				}, parameters.validity, mode ? parameters.token : null);
+				return authority.issue(parameters.name, {
+					prefix: parameters.prefix
+				}, permissions, parameters.validity, useToken ? parameters.token : null);
 			},
 			parameters: {
 				token: "string", // Token or password
+				// Application parameters
 				name: "string", // Application name or personal name
 				prefix: "string", // Message prefix
+				// Token validity
 				issuer: "boolean", // Is the token allowed to issue more children
 				validity: "number", // Validity date
+				// Messaging scope
 				users: "boolean", // Allowed to message users
-				channels: "array" // Channels which are allowed
+				channels: "array", // Channels which are allowed
 			}
 		}
 	}

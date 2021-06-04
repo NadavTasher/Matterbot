@@ -65,10 +65,13 @@
                 // Send API call to issue token
                 API.call("authority", "issue", {
                     token: "access".read(), // Parent token / Password
+                    
                     name: "name".read(), // Personal name / Application name
                     prefix: "prefix".read(), // Message prefix
+
                     issuer: "issuer".read() === "true", // Will this token be able to issue child tokens?
                     validity: new Date("validity".read()).getTime(), // Token expiration date
+
                     users: "users".read() === "true", // Allowed to message users
                     channels: "channels".read().split(",").map((value) => value.trim()) // Channels allowed to message
                 }).then(
@@ -113,10 +116,10 @@
             <!-- Messaging inputs -->
             <input medium left id="prefix" placeholder="Message prefix" />
             <select medium left input id="users">
-                <option value="true">Allowed to message individuals</option>
-                <option value="false">Not allowed to message individuals</option>
+                <option value="true">Allowed to message users</option>
+                <option value="false">Not allowed to message users</option>
             </select>
-            <input small left id="channels" placeholder="Channels - team:channel" />
+            <input small left id="channels" placeholder="Channels and teams - 'team:channel' or just 'team'" />
             <!-- Submit button -->
             <button medium right id="issue">Issue token</button>
         </div>
