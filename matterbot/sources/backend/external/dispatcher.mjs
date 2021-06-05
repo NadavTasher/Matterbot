@@ -10,7 +10,7 @@ export default {
 	// Dispatcher API
 	mattermost: {
 		dispatch: {
-			handler: (parameters) => {
+			handler: async (parameters) => {
 				// Validate token with mattermost permission
 				const token = authority.validate(parameters.token, [`mattermost`]);
 
@@ -40,10 +40,13 @@ export default {
 				}
 
 				// Dispatch messages
-				Bot.deliver(token.contents().prefix + parameters.message, parameters.recipients, parameters.important);
+				if (parameters.important)
+					await Bot.deliver(token.contents().prefix + parameters.message, parameters.recipients, true);
+				else
+					Bot.deliver(token.contents().prefix + parameters.message, parameters.recipients, false);
 
 				// Return message
-				return parameters.important ? `Message ${parameters.message} was sent.` : `Sending "${parameters.message}" quietly.`;
+				return parameters.important ? `Message was sent` : `Sending quietly`;
 			},
 			parameters: {
 				token: "string",
@@ -74,7 +77,7 @@ export default {
 
 				// Create token parameters
 				let permissions = [`mattermost`];
-				
+
 				// Check if issuer
 				if (parameters.issuer)
 					permissions.push(`issue`);
