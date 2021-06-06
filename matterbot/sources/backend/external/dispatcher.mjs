@@ -28,7 +28,7 @@ export default {
 
 					// Loop over all channels
 					for (const channel of parameters.recipients.channels[team]) {
-						if (["Town Square", "town-square", "Off-Topic", "off-topic"].includes(channel)) {
+						if (["town-square", "off-topic"].includes(channel)) {
 							if (!token.has(`mattermost:channels:${team}:${channel}`))
 								throw new Error(`Exception channel messaging to channel ${channel} in team ${team} is not allowed to this token`)
 						} else {
