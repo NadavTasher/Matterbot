@@ -101,13 +101,13 @@ export class Client {
 			throw new Error("Team does not exist");
 
 		// Make sure channel exists
-		if (!Client.#tree[team].channels.hasOwnProperty(channel))
+		if (!Client.#tree[team].hasOwnProperty(channel))
 			// Return failure
 			throw new Error("Channel does not exist");
 
 		// Send request
 		await Client.#call(`posts`, {}, {
-			channel_id: Client.#tree[team].channels[channel],
+			channel_id: Client.#tree[team][channel],
 			message: message
 		});
 	}
@@ -118,7 +118,10 @@ export class Client {
 	 * @param teamName Team Name
 	 * @param teamDisplay Team Display Name
 	 */
-	static async #team(teamID, teamName, teamDisplay) {
+	static async #team(teamID, teamName) {
+		// Initialize objects
+		Client.#tree[teamName] = {};
+
 		// Load team channels
 		const channels = await Client.#call(`users/${Client.#userID}/teams/${teamID}/channels`);
 
@@ -131,8 +134,7 @@ export class Client {
 					continue;
 
 				// Add to tree and aliases
-				Client.#tree[teamName].channels[channel.name] = channel.id;
-				Client.#tree[teamDisplay].channels[channel.display_name] = channel.id;
+				Client.#tree[teamName][channel.name] = channel.id;
 
 				// Add to known ID list
 				Client.#ids.push(channel.id);
@@ -183,12 +185,8 @@ export class Client {
 
 		// Loop for each team and add to list
 		for (let team of listTeams) {
-			// Initialize objects
-			Client.#tree[team.name] = { id: team.id, channels: [] };
-			Client.#tree[team.display_name] = { id: team.id, channels: [] };
-
 			// Update team with new information
-			Client.#team(team.id, team.name, team.display_name);
+			Client.#team(team.id, team.name);
 		}
 	}
 

@@ -7,7 +7,16 @@
 import REPL from "repl";
 
 // Import utilities
-import { Utilities, Validator, Hash, Password, Authority, File, Database } from "./internal/utilities.mjs";
+import {
+    File,
+    Hash,
+    Type,
+    Token,
+    Charset,
+    Password,
+    Validator,
+    Authority
+} from "./internal/utilities.mjs";
 import { Bot } from "./external/bot.mjs";
 import { Client } from "./external/client.mjs";
 
@@ -15,13 +24,14 @@ import { Client } from "./external/client.mjs";
 let mREPL = REPL.start();
 
 // Update context
-mREPL.context.Utilities = Utilities;
-mREPL.context.Validator = Validator;
-mREPL.context.Hash = Hash;
-mREPL.context.Password = Password;
-mREPL.context.Authority = Authority;
 mREPL.context.File = File;
-mREPL.context.Database = Database;
+mREPL.context.Hash = Hash;
+mREPL.context.Type = Type;
+mREPL.context.Token = Token;
+mREPL.context.Charset = Charset;
+mREPL.context.Password = Password;
+mREPL.context.Validator = Validator;
+mREPL.context.Authority = Authority;
 
 mREPL.context.Bot = Bot;
 mREPL.context.Client = Client;

@@ -66,7 +66,7 @@ export default {
 				// Check for password validation
 				if (!Password.check(parameters.token, process.env.PASSWORD)) {
 					// Validate token
-					token.validate(parameters.token);
+					authority.validate(parameters.token);
 					// Change mode
 					useToken = true;
 				}
