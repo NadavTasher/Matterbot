@@ -120,7 +120,8 @@ export class Client {
 	 */
 	static async #team(teamID, teamName) {
 		// Initialize objects
-		Client.#tree[teamName] = {};
+		if (!Client.#tree.hasOwnProperty(teamName))
+			Client.#tree[teamName] = {};
 
 		// Load team channels
 		const channels = await Client.#call(`users/${Client.#userID}/teams/${teamID}/channels`);
