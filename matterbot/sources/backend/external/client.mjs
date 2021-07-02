@@ -119,8 +119,9 @@ export class Client {
 	 * @param teamDisplay Team Display Name
 	 */
 	static async #team(teamID, teamName) {
-		// Initialize objects
+		// Make sure tree exists in tree
 		if (!Client.#tree.hasOwnProperty(teamName))
+			// Create team in tree
 			Client.#tree[teamName] = {};
 
 		// Load team channels
