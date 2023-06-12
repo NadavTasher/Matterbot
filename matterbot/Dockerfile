@@ -1,12 +1,6 @@
 # Select the base image
-FROM nadavtasher/template:2021.06.04
-
-# Install dependencies
-RUN npm install node-fetch
-
-# Disable certificate verification
-ENV NODE_TLS_REJECT_UNAUTHORIZED 0
+FROM webhood/3.8:2023.06.10
 
 # Copy sources
-COPY sources/backend backend
-COPY sources/frontend frontend
+COPY backend /application/backend
+COPY frontend /application/frontend
